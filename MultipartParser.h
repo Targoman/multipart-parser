@@ -8,7 +8,7 @@
 
 class MultipartParser {
 public:
-	typedef void (*Callback)(const char *buffer, size_t start, size_t end, void *userData);
+    typedef void (*Callback)(const char *buffer, long long  start, long long  end, void *userData);
 	
 private:
 	static const char CR     = 13;
@@ -16,7 +16,7 @@ private:
 	static const char SPACE  = 32;
 	static const char HYPHEN = 45;
 	static const char COLON  = 58;
-	static const size_t UNMARKED = (size_t) -1;
+    static const long long  UNMARKED = (long long ) -1;
 	
 	enum State {
 		ERROR,
@@ -41,16 +41,16 @@ private:
 	
 	std::string boundary;
 	const char *boundaryData;
-	size_t boundarySize;
+    long long  boundarySize;
 	bool boundaryIndex[256];
 	char *lookbehind;
-	size_t lookbehindSize;
+    long long  lookbehindSize;
 	State state;
 	int flags;
-	size_t index;
-	size_t headerFieldMark;
-	size_t headerValueMark;
-	size_t partDataMark;
+    long long  index;
+    long long  headerFieldMark;
+    long long  headerValueMark;
+    long long  partDataMark;
 	const char *errorReason;
 	
 	void resetCallbacks() {
@@ -76,8 +76,8 @@ private:
 		}
 	}
 	
-	void callback(Callback cb, const char *buffer = NULL, size_t start = UNMARKED,
-		size_t end = UNMARKED, bool allowEmpty = false)
+    void callback(Callback cb, const char *buffer = NULL, long long  start = UNMARKED,
+        long long  end = UNMARKED, bool allowEmpty = false)
 	{
 		if (start != UNMARKED && start == end && !allowEmpty) {
 			return;
@@ -87,7 +87,7 @@ private:
 		}
 	}
 	
-	void dataCallback(Callback cb, size_t &mark, const char *buffer, size_t i, size_t bufferLen,
+    void dataCallback(Callback cb, long long  &mark, const char *buffer, long long  i, long long  bufferLen,
 		bool clear, bool allowEmpty = false)
 	{
 		if (mark == UNMARKED) {
@@ -122,8 +122,8 @@ private:
 		errorReason = message;
 	}
 	
-	void processPartData(size_t &prevIndex, size_t &index, const char *buffer,
-		size_t len, size_t boundaryEnd, size_t &i, char c, State &state, int &flags)
+    void processPartData(long long &prevIndex, long long &index, const char *buffer,
+        long long len, long long boundaryEnd, long long &i, char c, State &state, int &flags)
 	{
 		prevIndex = index;
 		
@@ -281,17 +281,17 @@ public:
 		errorReason = "No error.";
 	}
 	
-	size_t feed(const char *buffer, size_t len) {
+    long long  feed(const char *buffer, long long  len) {
 		if (state == ERROR || len == 0) {
 			return 0;
 		}
 		
 		State state         = this->state;
 		int flags           = this->flags;
-		size_t prevIndex    = this->index;
-		size_t index        = this->index;
-		size_t boundaryEnd  = boundarySize - 1;
-		size_t i;
+        long long  prevIndex    = this->index;
+        long long  index        = this->index;
+        long long  boundaryEnd  = boundarySize - 1;
+        long long  i;
 		char c, cl;
 		
 		for (i = 0; i < len; i++) {
@@ -303,7 +303,10 @@ public:
 			case START:
 				index = 0;
 				state = START_BOUNDARY;
-			case START_BOUNDARY:
+                #if defined(__GNUG__) && (__GNUC__ >= 7)
+                [[fallthrough]];
+                #endif
+            case START_BOUNDARY:
 				if (index == boundarySize - 2) {
 					if (c != CR) {
 						setError("Malformed. Expected CR after boundary.");
@@ -331,7 +334,10 @@ public:
 				state = HEADER_FIELD;
 				headerFieldMark = i;
 				index = 0;
-			case HEADER_FIELD:
+                #if defined(__GNUG__) && (__GNUC__ >= 7)
+                [[fallthrough]];
+                #endif
+            case HEADER_FIELD:
 				if (c == CR) {
 					headerFieldMark = UNMARKED;
 					state = HEADERS_ALMOST_DONE;
@@ -367,7 +373,10 @@ public:
 				
 				headerValueMark = i;
 				state = HEADER_VALUE;
-			case HEADER_VALUE:
+                #if defined(__GNUG__) && (__GNUC__ >= 7)
+                [[fallthrough]];
+                #endif
+            case HEADER_VALUE:
 				if (c == CR) {
 					dataCallback(onHeaderValue, headerValueMark, buffer, i, len, true, true);
 					callback(onHeaderEnd);
@@ -394,7 +403,10 @@ public:
 			case PART_DATA_START:
 				state = PART_DATA;
 				partDataMark = i;
-			case PART_DATA:
+                #if defined(__GNUG__) && (__GNUC__ >= 7)
+                [[fallthrough]];
+                #endif
+            case PART_DATA:
 				processPartData(prevIndex, index, buffer, len, boundaryEnd, i, c, state, flags);
 				break;
 			default:

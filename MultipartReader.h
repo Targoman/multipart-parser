@@ -22,7 +22,7 @@ public:
 class MultipartReader {
 public:
 	typedef void (*PartBeginCallback)(const MultipartHeaders &headers, void *userData);
-	typedef void (*PartDataCallback)(const char *buffer, size_t size, void *userData);
+    typedef void (*PartDataCallback)(const char *buffer, long long  size, void *userData);
 	typedef void (*Callback)(void *userData);
 
 private:
@@ -51,7 +51,7 @@ private:
 		parser.userData      = this;
 	}
 	
-	static void cbPartBegin(const char *buffer, size_t start, size_t end, void *userData) {
+    static void cbPartBegin(const char*, long long, long long, void *userData) {
 		MultipartReader *self = (MultipartReader *) userData;
 		self->headersProcessed = false;
 		self->currentHeaders.clear();
@@ -59,17 +59,17 @@ private:
 		self->currentHeaderValue.clear();
 	}
 	
-	static void cbHeaderField(const char *buffer, size_t start, size_t end, void *userData) {
+    static void cbHeaderField(const char *buffer, long long  start, long long  end, void *userData) {
 		MultipartReader *self = (MultipartReader *) userData;
 		self->currentHeaderName.append(buffer + start, end - start);
 	}
 	
-	static void cbHeaderValue(const char *buffer, size_t start, size_t end, void *userData) {
+    static void cbHeaderValue(const char *buffer, long long  start, long long  end, void *userData) {
 		MultipartReader *self = (MultipartReader *) userData;
 		self->currentHeaderValue.append(buffer + start, end - start);
 	}
 	
-	static void cbHeaderEnd(const char *buffer, size_t start, size_t end, void *userData) {
+    static void cbHeaderEnd(const char*, long long, long long, void *userData) {
 		MultipartReader *self = (MultipartReader *) userData;
 		self->currentHeaders.insert(std::make_pair(self->currentHeaderName,
 			self->currentHeaderValue));
@@ -77,7 +77,7 @@ private:
 		self->currentHeaderValue.clear();
 	}
 	
-	static void cbHeadersEnd(const char *buffer, size_t start, size_t end, void *userData) {
+    static void cbHeadersEnd(const char*, long long, long long, void *userData) {
 		MultipartReader *self = (MultipartReader *) userData;
 		if (self->onPartBegin != NULL) {
 			self->onPartBegin(self->currentHeaders, self->userData);
@@ -87,21 +87,21 @@ private:
 		self->currentHeaderValue.clear();
 	}
 	
-	static void cbPartData(const char *buffer, size_t start, size_t end, void *userData) {
+    static void cbPartData(const char *buffer, long long  start, long long  end, void *userData) {
 		MultipartReader *self = (MultipartReader *) userData;
 		if (self->onPartData != NULL) {
 			self->onPartData(buffer + start, end - start, self->userData);
 		}
 	}
 	
-	static void cbPartEnd(const char *buffer, size_t start, size_t end, void *userData) {
+    static void cbPartEnd(const char*, long long, long long, void *userData) {
 		MultipartReader *self = (MultipartReader *) userData;
 		if (self->onPartEnd != NULL) {
 			self->onPartEnd(self->userData);
 		}
 	}
 	
-	static void cbEnd(const char *buffer, size_t start, size_t end, void *userData) {
+    static void cbEnd(const char*, long long, long long, void *userData) {
 		MultipartReader *self = (MultipartReader *) userData;
 		if (self->onEnd != NULL) {
 			self->onEnd(self->userData);
@@ -133,7 +133,7 @@ public:
 		parser.setBoundary(boundary);
 	}
 	
-	size_t feed(const char *buffer, size_t len) {
+    long long  feed(const char *buffer, long long  len) {
 		return parser.feed(buffer, len);
 	}
 	
