@@ -409,7 +409,10 @@ public:
             case PART_DATA:
 				processPartData(prevIndex, index, buffer, len, boundaryEnd, i, c, state, flags);
 				break;
-			default:
+            case END:
+              this->state = END;
+              return i;
+            default:
 				return i;
 			}
 		}
@@ -419,8 +422,8 @@ public:
 		dataCallback(onPartData, partDataMark, buffer, i, len, false);
 		
 		this->index = index;
-		this->state = state;
-		this->flags = flags;
+        this->state = state;
+        this->flags = flags;
 		
 		return len;
 	}
